@@ -25,8 +25,8 @@ graphics libraries. See [Audi A4 setup, validation and known limits](tools/mhi2/
 Its local emulator checks do not establish complete map rendering or physical
 MMI / Virtual Cockpit compatibility.
 
-For the original Audi A3, Volkswagen and Porsche build commands below, use
-variant-70 update assets. The builder checks the
+The build commands below require variant-70 update assets, including Audi A4.
+The builder checks the
 archive's `[common]` release against the selected profile and rejects a
 mismatch. Porsche P5250, POG24 K4196 and other trains are **not** substitutes
 for the K5126 command below.
@@ -36,6 +36,20 @@ selection path but have not been validated here. Allow at least 25 GB of free
 space per build, plus room for your archives; large firmware packages need
 more. Keep the checkout and build directories after building: the generated
 launcher uses both.
+
+## Audi additions in this review branch
+
+This branch adds the Audi fascia and MMI Select controls, the A4 1024×480
+profile, K3346-specific service definitions, experimental touchpad/cursor
+input, AU491 vehicle coding for populated menu resources, and an opt-in P470
+map shader cache for roads, sky, labels and POI billboards. Ukrainian
+localization is excluded. Full map coverage and first-start reliability
+remain open; see [the change inventory and checks](tools/mhi2/README.AUDI-A4.md).
+
+The download commands below select `yety-ua/qemu-mhi2` branch
+`audi-a4-emulator-review`, which contains these changes. The original
+`iscle/qemu-mhi2` `main` does not contain them until the PR is merged.
+The bootstrap still comes from the original project's published release.
 
 ## 1. Set up macOS
 
@@ -53,10 +67,10 @@ brew install git pkgconf ninja python glib pixman mesa lzo libusb libslirp seven
 
 export MHI2_REPRO="$HOME/mhi2-repro"
 mkdir -p "$MHI2_REPRO"
-curl -fL https://github.com/iscle/qemu-mhi2/archive/refs/heads/main.zip \
+curl -fL https://github.com/yety-ua/qemu-mhi2/archive/refs/heads/audi-a4-emulator-review.zip \
   -o "$MHI2_REPRO/qemu.zip"
 unzip -q "$MHI2_REPRO/qemu.zip" -d "$MHI2_REPRO"
-mv "$MHI2_REPRO/qemu-mhi2-main" "$MHI2_REPRO/qemu"
+mv "$MHI2_REPRO/qemu-mhi2-audi-a4-emulator-review" "$MHI2_REPRO/qemu"
 cd "$MHI2_REPRO/qemu"
 "$(brew --prefix python)/bin/python3" -m venv .venv
 . .venv/bin/activate
@@ -64,12 +78,12 @@ python -m pip install -r tools/mhi2/requirements-audi.txt
 ```
 
 Despite its historical name, `requirements-audi.txt` supplies the Python
-requirements for all three profiles. Use Python 3.11 or newer. **Code → Download
+requirements for all four profiles. Use Python 3.11 or newer. **Code → Download
 ZIP**, the ZIP command above, and Git clones (including shallow clones) are all
 supported. If you prefer Git, replace the download/unzip/move commands with:
 
 ```sh
-git clone --depth 1 --branch main https://github.com/iscle/qemu-mhi2.git "$MHI2_REPRO/qemu"
+git clone --depth 1 --branch audi-a4-emulator-review https://github.com/yety-ua/qemu-mhi2.git "$MHI2_REPRO/qemu"
 ```
 
 The ZIP contains source, so it still needs to be compiled. Git is used only to
@@ -101,7 +115,7 @@ on Apple Silicon.
 
 ## 2. Download the emulator bootstrap
 
-The update archive is not a complete flash image. All three workflows also
+The update archive is not a complete flash image. All four workflows also
 need the captured boot handoff and formatted disk template from the
 [bootstrap release](https://github.com/iscle/qemu-mhi2/releases/tag/mhi2-bootstrap-v1):
 
@@ -163,7 +177,15 @@ The profile selects the Audi controller and 12 MHz oscillator. Use the curved
 arrows or mouse wheel to rotate MMI Select, press the knob to select, and use
 the four surrounding buttons for joystick input. Screen clicks are not
 touchscreen input; the separate experimental touchpad provides Map/Characters
-modes. Volkswagen remains the default when no firmware profile is selected.
+modes. In Characters mode, open a native text field, draw a block letter or
+digit, select a candidate and click Send. Latin and shared Cyrillic shapes
+are experimental; cursive and Ukrainian-specific glyphs are not included.
+In Map mode, open navigation first; with `MHI2_MAP_JOYSTICK=1`, dragging moves
+a cursor overlay and release requests native point information. The map is
+stationary while dragging the cursor. Joystick buttons separately scroll the
+native map, stopping on release. Volkswagen remains the default for the
+launcher when no firmware profile is selected; the legacy builder defaults
+to Audi A3, so pass `--firmware` explicitly.
 
 The bridge build and local emulator checks passed, but a fresh archive-to-boot
 run of this exact command has not been validated. Navigation additionally
@@ -215,6 +237,10 @@ In a new Terminal, you can boot an existing build without rebuilding:
 ```sh
 export MHI2_REPRO="$HOME/mhi2-repro"
 bash "$MHI2_REPRO/porsche-build/run.sh"  # or audi-build / vw-build
+# Audi A4 retains its wider host display on every launch:
+MHI2_GL_WIDTH=1024 MHI2_GL_HEIGHT=480 \
+  bash "$MHI2_REPRO/audi-a4-build/run.sh"
+# Add MHI2_MAP_JOYSTICK=1 for the optional native map adapter.
 ```
 
 For console-only testing, add `--headless`. The generated launcher selects
@@ -293,8 +319,12 @@ host backends have local Apple Silicon macOS execution evidence. The Porsche
 workflow was also tested from an extracted source ZIP with no `.git` directory
 after rebasing onto official QEMU: a clean build using the published bootstrap
 and original K5126 archive reached the native radio screen. That run used
-GNU Arm 14.3.Rel1. See [validation details](tools/mhi2/CONSOLIDATION.md). Audi and VW
-were not freshly boot-tested on macOS for this guide. This is not a
+GNU Arm 14.3.Rel1. See [validation details](tools/mhi2/CONSOLIDATION.md).
+The original Audi A3 and VW archive workflows were not freshly boot-tested
+on macOS for this guide. Audi A4 K3346 has earlier local Apple Silicon emulator
+screenshots plus the branch's controller/service/rendering checks; its fresh
+archive-to-boot workflow and English stock-media visual acceptance remain
+unverified. This is not a
 claim that every firmware, host architecture, vehicle service or Android Auto
 connection works. Original HMI executables are used with emulator compatibility
 libraries and a diagnostic shell in disposable media. Do not flash those
@@ -314,6 +344,22 @@ images onto a real head unit.
   `/tmp/mhi2-viewer.log`, `/tmp/mhi2-debug-host.log`, `/tmp/mhi2-debug-console.log`
   and `/tmp/mhi2-glhost.log`. Full logs are copied to the build's `media/runs/`
   when the session closes.
+- **Audi A4 looks narrow or has no framebuffer:** build the guest bridge with
+  both 1024×480 flags and launch with `MHI2_GL_WIDTH=1024 MHI2_GL_HEIGHT=480`.
+  An 800×480 guest frame does not match the A4 viewer. Use this review branch.
+- **K3346 main-menu icons are missing:** verify the exact firmware metadata
+  selects `audi-a4` and its K3346 persistence coding. The AU491 identity selects
+  populated menu resources; generic AU370 coding selected an empty resource
+  in prior local analysis. This is independent of translated menu text.
+- **Map roads, labels or POIs are missing:** use matching separately prepared
+  map data and a combined HMI/P470 shader cache in the media manifest. The
+  extra cache is opt-in and does not guarantee complete 3D/detail coverage.
+  See [map rendering setup and checks](tools/mhi2/experiments/audi-p470/README.md).
+- **Touchpad is inactive:** open navigation for Map mode or a native text
+  field for Characters mode. The pad follows firmware readiness/context;
+  `MHI2_TOUCHPAD=0` disables its companion device.
+- **Navigation stalls on first start:** cold-start reliability remains open;
+  deadline and delayed-launch experiments did not cure it and are excluded.
 - **A session is already running:** close its viewer or stop its Terminal
   before starting another firmware profile.
 
@@ -322,7 +368,8 @@ To copy files from Linux or macOS into QNX, see
 It includes a host upload command, an HMI JAR example, writable mounts and
 persistent copies.
 
-For advanced details see the [Audi reproduction guide](tools/mhi2/AUDI_A3.md),
+For advanced details see the [Audi A4 guide](tools/mhi2/README.AUDI-A4.md),
+[Audi A3 reproduction guide](tools/mhi2/AUDI_A3.md),
 [emulator internals](tools/mhi2/README.md), [fork notes](README.MHI2.md)
 and the original [upstream QEMU README](README.rst).
 

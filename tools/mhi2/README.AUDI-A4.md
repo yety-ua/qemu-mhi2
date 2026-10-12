@@ -67,13 +67,19 @@ MHI2_BUILD_LIBRARIES_ONLY=1 MHI2_BUILD_DIR=/tmp/mhi2-a4-bridge \
   bash tools/mhi2/glforward/build_local.sh
 ```
 
-Set MHI2_GLHOST to that build's mhi2-glhost when launching. Default bridge
+The main [build and boot guide](../../README.md#audi-a4-b9--k3346-experimental)
+also shows the experimental full archive build, which automatically stages
+these libraries; that fresh archive-to-boot workflow remains unverified.
+For a manually prepared build, set MHI2_GLHOST to its mhi2-glhost when launching. Default bridge
 builds remain 800 x 480. The experimental MHI2_NAV_MAP_TRANSMISSION override
 accepts only 0..3; it does not prove Virtual Cockpit LVDS output.
+`MHI2_GL_STATS=1` enables per-client draw diagnostics. `MHI2_BOOT_COMMANDS`
+can name a local guest-command file appended to the diagnostic boot commands;
+neither option supplies a navigation startup fix.
 
 ## Map rendering experiment
 
-See experiments/audi-p470/README.md. This is an isolated, explicitly enabled
+See [the shader experiment guide](experiments/audi-p470/README.md). This is an isolated, explicitly enabled
 cache and is not selected automatically for VW or other firmware. The HMI
 and navigation shader caches must be combined in a separate directory;
 do not replace the original reviewed cache.
