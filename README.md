@@ -16,10 +16,17 @@ brand:
 | Profile | Firmware train | MU | Controls |
 | --- | --- | --- | --- |
 | `audi-a3` | `MHI2_ER_AU37x_P5089` | 1326 | MMI rotary controller, context keys; no touchscreen |
+| `audi-a4` (Audi A4 B9, experimental) | `MHI2_ER_AUG22_K3346` | 1438 | 1024×480 display, Audi MMI controller, joystick and experimental touchpad; no touchscreen |
 | `vw` | `MHI2_ER_VWG11_K3342` | 1427 | Touchscreen and VW side keys/knobs |
 | `porsche` | `MHI2_ER_POG11_K5126` | 1394 | Touchscreen and Porsche PCM fascia |
 
-Use variant-70 update assets for these profiles. The builder checks the
+The Audi A4 profile uses separately prepared matching media and 1024×480 guest
+graphics libraries. See [Audi A4 setup, validation and known limits](tools/mhi2/README.AUDI-A4.md).
+Its local emulator checks do not establish complete map rendering or physical
+MMI / Virtual Cockpit compatibility.
+
+For the original Audi A3, Volkswagen and Porsche build commands below, use
+variant-70 update assets. The builder checks the
 archive's `[common]` release against the selected profile and rejects a
 mismatch. Porsche P5250, POG24 K4196 and other trains are **not** substitutes
 for the K5126 command below.
