@@ -144,6 +144,34 @@ knob, Enter selects, Esc goes back and M opens Menu. Click or scroll over the
 knobs. Screen clicks do not send touches for Audi. Its launcher selects the
 required 12 MHz oscillator automatically.
 
+### Audi A4 B9 — K3346 (experimental)
+
+Use the exact `MHI2_ER_AUG22_K3346` / MU 1438 update archive. The A4 display
+requires 1024×480 guest graphics libraries; pass these build flags explicitly:
+
+```sh
+MHI2_GL_CFLAGS='-DMHI2_DEFAULT_W=1024 -DMHI2_DEFAULT_H=480' \
+  python tools/mhi2/build_firmware.py --firmware audi-a4 \
+  --archive "/path/to/your-MHI2_ER_AUG22_K3346-MU1438-update.7z" \
+  --bootstrap "$MHI2_REPRO/bootstrap/bootstrap-v1" \
+  --output "$MHI2_REPRO/audi-a4-build" --jobs 6
+MHI2_GL_WIDTH=1024 MHI2_GL_HEIGHT=480 \
+  bash "$MHI2_REPRO/audi-a4-build/run.sh"
+```
+
+The profile selects the Audi controller and 12 MHz oscillator. Use the curved
+arrows or mouse wheel to rotate MMI Select, press the knob to select, and use
+the four surrounding buttons for joystick input. Screen clicks are not
+touchscreen input; the separate experimental touchpad provides Map/Characters
+modes. Volkswagen remains the default when no firmware profile is selected.
+
+The bridge build and local emulator checks passed, but a fresh archive-to-boot
+run of this exact command has not been validated. Navigation additionally
+requires separately prepared map data and the opt-in shader cache; firmware
+alone does not provide it. For native map scrolling, add `MHI2_MAP_JOYSTICK=1`
+to the launch environment. See [Audi A4 setup and known limits](tools/mhi2/README.AUDI-A4.md)
+for the map cache, first-start issues and remaining visual validation.
+
 ### Volkswagen
 
 ```sh
